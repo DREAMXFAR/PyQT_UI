@@ -14,6 +14,10 @@ class ChangeDetectionMainWin(QWidget):
         self.setUIGeometry()  # 设置主窗口布局
         self.initUI()
 
+        self.imageBefore_path = None
+        self.imageAfter_path = None
+        self.changeResult_path = None
+
     def setUIGeometry(self):
         """
         设置主窗口居中布局，尺寸大小
@@ -28,8 +32,8 @@ class ChangeDetectionMainWin(QWidget):
         # 获取屏幕坐标
         screen = QDesktopWidget().screenGeometry()
         # 移动窗口
-        x = int((screen.width()-size.width())/2)
-        y = int((screen.height()-size.height()-100)/2)
+        x = int((screen.width()-size.width()-200)/2)
+        y = int((screen.height()-size.height()-80)/2)
         self.move(x, y)
 
     def initUI(self):
@@ -40,16 +44,26 @@ class ChangeDetectionMainWin(QWidget):
         globLayout.addWidget(self.tools, 1, 1, 1, 2)
         # image pair 图像对
         self.imgpairs = self.imgPair()
-        globLayout.addWidget(self.imgpairs, 2, 1, 2, 2)
+        globLayout.addWidget(self.imgpairs, 2, 1, 3, 2)
         # 变化检测结果显示
         self.cdResult = self.cdResultShow()
-        globLayout.addWidget(self.cdResult, 4, 1, 2, 2)
+        globLayout.addWidget(self.cdResult, 5, 1, 3, 2)
         # map 地图
         self.map = self.mapShow()
-        globLayout.addWidget(self.map, 1, 3, 5, 5)
+        globLayout.addWidget(self.map, 1, 3, 7, 7)
         # table 表格
         self.table = self.tableShow()
-        globLayout.addWidget(self.table, 1, 8, 5, 1)
+        globLayout.addWidget(self.table, 1, 10, 7, 1)
+
+        # 变化监测结果记录
+        self.textRecord = self.recordShow_1()
+        globLayout.addWidget(self.textRecord, 8, 1, 1, 2)
+        # 统计结果记录
+        self.textRecord = self.recordShow_2()
+        globLayout.addWidget(self.textRecord, 8, 3, 1, 7)
+        # 统计结果记录
+        self.textRecord = self.recordShow_3()
+        globLayout.addWidget(self.textRecord, 8, 10, 1, 7)
 
         # 添加状态栏
         # self.statusbar = QStatusBar()
@@ -129,8 +143,9 @@ class ChangeDetectionMainWin(QWidget):
         # 设置布局
         resLayout = QGridLayout()
         # 添加属性调整按钮
-        refineBtn = QPushButton('属性')
-        resLayout.addWidget(refineBtn, 1, 1, 1, 1)
+        catBtn = QPushButton('类别')
+        resLayout.addWidget(catBtn, 1, 1, 1, 1)
+        catBtn.clicked.connect(self.getItem)
         # 添加绘制按钮
         drawBtn = QPushButton('绘制')
         resLayout.addWidget(drawBtn, 2, 1, 1, 1)
@@ -143,6 +158,48 @@ class ChangeDetectionMainWin(QWidget):
         self.changeMap.setPixmap(QPixmap(r'img/label.png'))
         self.changeMap.setScaledContents(True)
         resLayout.addWidget(self.changeMap, 1, 2, 3, 3)
+        # 添加布局
+        reswidget.setLayout(resLayout)
+
+        return reswidget
+
+    def recordShow_1(self):
+        # 设置窗口对象
+        reswidget = QGroupBox('变化区域类型记录', self)
+        # 设置布局
+        resLayout = QGridLayout(reswidget)
+        # 结果显示
+        self.textShow = QTextEdit(reswidget)
+        self.textShow.setText('变化区域属性')
+        resLayout.addWidget(self.textShow)
+        # 添加布局
+        reswidget.setLayout(resLayout)
+
+        return reswidget
+
+    def recordShow_2(self):
+        # 设置窗口对象
+        reswidget = QGroupBox('统计结果记录', self)
+        # 设置布局
+        resLayout = QGridLayout(reswidget)
+        # 结果显示
+        self.textShow = QTextEdit(reswidget)
+        self.textShow.setText('统计结果')
+        resLayout.addWidget(self.textShow)
+        # 添加布局
+        reswidget.setLayout(resLayout)
+
+        return reswidget
+
+    def recordShow_3(self):
+        # 设置窗口对象
+        reswidget = QGroupBox('统计结果记录', self)
+        # 设置布局
+        resLayout = QGridLayout(reswidget)
+        # 结果显示
+        self.textShow = QTextEdit(reswidget)
+        self.textShow.setText('变化区域属性')
+        resLayout.addWidget(self.textShow)
         # 添加布局
         reswidget.setLayout(resLayout)
 
@@ -169,6 +226,8 @@ class ChangeDetectionMainWin(QWidget):
         image = QPixmap(fname)
         image.scaled(self.imageAfter.width(), self.imageAfter.height())
         self.imageAfter.setPixmap(image)
+
+        self.imageAfter_path = fname
         # self.imageBefore.setScaledContents(True)
 
     def loadDir(self):
@@ -179,9 +238,17 @@ class ChangeDetectionMainWin(QWidget):
 
     def drawArea(self):
         self.form1 = QDialog()
-        DrawWindow(self.form1)
+        DrawWindow(self.form1, self.imageBefore_path, self.imageAfter_path, self.changeResult_path)
         self.form1.show()
         self.form1.exec_()
+
+    def getItem(self):
+        items = ('建筑', '林地', '耕地', '水域')
+        dialog = QInputDialog()
+        dialog.resize(400, 400)
+        item, ok = dialog.getItem(self, '变化类型', '用地类型:', items)
+        if ok and item:
+            self.cd_category = item
 
 
 if __name__ == '__main__':
