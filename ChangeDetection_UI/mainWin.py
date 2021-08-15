@@ -18,6 +18,8 @@ class ChangeDetectionMainWin(QWidget):
         self.imageAfter_path = None
         self.changeResult_path = None
 
+        self.flag = False
+
     def setUIGeometry(self):
         """
         设置主窗口居中布局，尺寸大小
@@ -153,11 +155,16 @@ class ChangeDetectionMainWin(QWidget):
         # 添加按钮
         setokBtn = QPushButton('确认')
         resLayout.addWidget(setokBtn, 3, 1, 1, 1)
+        setokBtn.clicked.connect(self.okDraw)
+        # 取消按钮
+        resumeBtn = QPushButton('恢复')
+        resLayout.addWidget(resumeBtn, 4, 1, 1, 1)
+        resumeBtn.clicked.connect(self.Resume)
         # 设置图像
         self.changeMap = QLabel(reswidget)
         self.changeMap.setPixmap(QPixmap(r'img/label.png'))
         self.changeMap.setScaledContents(True)
-        resLayout.addWidget(self.changeMap, 1, 2, 3, 3)
+        resLayout.addWidget(self.changeMap, 1, 2, 4, 4)
         # 添加布局
         reswidget.setLayout(resLayout)
 
@@ -237,10 +244,19 @@ class ChangeDetectionMainWin(QWidget):
         print("\n你选择的文件夹为:", dir_choose)
 
     def drawArea(self):
-        self.form1 = QDialog()
-        DrawWindow(self.form1, self.imageBefore_path, self.imageAfter_path, self.changeResult_path)
+        self.form1 = DrawWindow(self.imageBefore_path, self.imageAfter_path, self.changeResult_path)
         self.form1.show()
-        self.form1.exec_()
+        self.form1.exec()
+        if True:
+            self.changeMap.setPixmap(self.form1.cd_res.pixmap().scaled(128, 128))
+            self.flag = True
+
+    def okDraw(self):
+        if self.flag:
+            self.form1.cd_res.pixmap().scaled(128, 128).save('pixmap.png')
+            reply = QMessageBox.information(self, '提示', '图片已保存!', QMessageBox.Yes | QMessageBox.Yes, QMessageBox.No)
+        else:
+            QMessageBox.information(self, '提示', '图片未修改, 无需重新保存!', QMessageBox.Yes | QMessageBox.Yes, QMessageBox.No)
 
     def getItem(self):
         items = ('建筑', '林地', '耕地', '水域')
@@ -249,6 +265,9 @@ class ChangeDetectionMainWin(QWidget):
         item, ok = dialog.getItem(self, '变化类型', '用地类型:', items)
         if ok and item:
             self.cd_category = item
+
+    def Resume(self):
+        self.changeMap.setPixmap(QPixmap(r'img/label.png'))
 
 
 if __name__ == '__main__':
