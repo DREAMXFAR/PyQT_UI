@@ -4,6 +4,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import *
 from PyQt5.Qt import *
+import cv2
+import numpy as np
 
 from drawWin import DrawWindow
 
@@ -16,7 +18,9 @@ class ChangeDetectionMainWin(QWidget):
 
         self.imageBefore_path = None
         self.imageAfter_path = None
-        self.changeResult_path = None
+        self.changeResult_path = 'img/label.png'
+        self.cd_category = None
+        self.area = None
 
         self.flag = False
 
@@ -176,9 +180,9 @@ class ChangeDetectionMainWin(QWidget):
         # 设置布局
         resLayout = QGridLayout(reswidget)
         # 结果显示
-        self.textShow = QTextEdit(reswidget)
-        self.textShow.setText('变化区域属性')
-        resLayout.addWidget(self.textShow)
+        self.textShow_1 = QTextEdit(reswidget)
+        self.textShow_1.setText('#变化区域属性#')
+        resLayout.addWidget(self.textShow_1)
         # 添加布局
         reswidget.setLayout(resLayout)
 
@@ -190,9 +194,9 @@ class ChangeDetectionMainWin(QWidget):
         # 设置布局
         resLayout = QGridLayout(reswidget)
         # 结果显示
-        self.textShow = QTextEdit(reswidget)
-        self.textShow.setText('统计结果')
-        resLayout.addWidget(self.textShow)
+        self.textShow_2 = QTextEdit(reswidget)
+        self.textShow_2.setText('#统计结果#')
+        resLayout.addWidget(self.textShow_2)
         # 添加布局
         reswidget.setLayout(resLayout)
 
@@ -204,9 +208,10 @@ class ChangeDetectionMainWin(QWidget):
         # 设置布局
         resLayout = QGridLayout(reswidget)
         # 结果显示
-        self.textShow = QTextEdit(reswidget)
-        self.textShow.setText('变化区域属性')
-        resLayout.addWidget(self.textShow)
+        self.textShow_3 = QTextEdit(reswidget)
+        self.textShow_3.resize(300, 100)
+        self.textShow_3.setText('#变化区域属性#')
+        resLayout.addWidget(self.textShow_3)
         # 添加布局
         reswidget.setLayout(resLayout)
 
@@ -216,12 +221,25 @@ class ChangeDetectionMainWin(QWidget):
         # 设置窗口对象
         tablewidget = QGroupBox('统计结果', self)
         # 设置布局
-        tableLayout = QVBoxLayout()
+        tableLayout = QGridLayout()
+        # 图像
+        table_image = QPixmap(r'img/table.jpeg')
+        table_image = table_image.scaled(400, 128)
         # 设置图像
-        tableMap = QLabel(tablewidget)
-        tableMap.setPixmap(QPixmap(r'img/table.jpeg'))
-        tableMap.setScaledContents(True)
-        tableLayout.addWidget(tableMap)
+        tableMap1 = QLabel(tablewidget)
+        tableMap1.setPixmap(table_image)
+        tableMap1.setScaledContents(True)
+        tableLayout.addWidget(tableMap1, 1, 1, 1, 1)
+        # 设置图像
+        tableMap2 = QLabel(tablewidget)
+        tableMap2.setPixmap(QPixmap(table_image))
+        tableMap2.setScaledContents(True)
+        tableLayout.addWidget(tableMap2, 2, 1, 1, 1)
+        # 设置图像
+        tableMap3 = QLabel(tablewidget)
+        tableMap3.setPixmap(QPixmap(table_image))
+        tableMap3.setScaledContents(True)
+        tableLayout.addWidget(tableMap3, 3, 1, 1, 1)
         # 添加布局
         tablewidget.setLayout(tableLayout)
 
@@ -253,10 +271,22 @@ class ChangeDetectionMainWin(QWidget):
 
     def okDraw(self):
         if self.flag:
+            self.changeResult_path = 'pixmap.png'
             self.form1.cd_res.pixmap().scaled(128, 128).save('pixmap.png')
             reply = QMessageBox.information(self, '提示', '图片已保存!', QMessageBox.Yes | QMessageBox.Yes, QMessageBox.No)
         else:
+            self.changeResult_path = 'img/label.png'
             QMessageBox.information(self, '提示', '图片未修改, 无需重新保存!', QMessageBox.Yes | QMessageBox.Yes, QMessageBox.No)
+
+        tmp_img = cv2.imread(self.changeResult_path, 0)
+        self.area = int(np.sum(tmp_img)/255)
+        self.image_shape = tmp_img.shape
+        self.whole_area = int(tmp_img.shape[0]*tmp_img.shape[1])
+
+        show_str = '变化图像路径：{},\n图像大小：{}，\n变化区域类型：{},\n变化区域面积：{}/{}.\n'.format(
+            self.changeResult_path, self.image_shape, self.cd_category, self.area, self.whole_area)
+        self.textShow_1.setText(show_str)
+
 
     def getItem(self):
         items = ('建筑', '林地', '耕地', '水域')
@@ -267,7 +297,18 @@ class ChangeDetectionMainWin(QWidget):
             self.cd_category = item
 
     def Resume(self):
-        self.changeMap.setPixmap(QPixmap(r'img/label.png'))
+        self.changeResult_path = r'img/label.png'
+        self.changeMap.setPixmap(QPixmap(self.changeResult_path))
+
+        tmp_img = cv2.imread(self.changeResult_path, 0)
+        self.area = int(np.sum(tmp_img) / 255)
+        self.image_shape = tmp_img.shape
+        self.whole_area = int(tmp_img.shape[0] * tmp_img.shape[1])
+
+        show_str = '变化图像路径：{},\n图像大小：{}，\n变化区域类型：{},\n变化区域面积：{}/{}.\n'.format(
+            self.changeResult_path, self.image_shape, self.cd_category, self.area, self.whole_area)
+        self.textShow_1.setText(show_str)
+
 
 
 if __name__ == '__main__':
