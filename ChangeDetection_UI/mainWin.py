@@ -190,12 +190,12 @@ class ChangeDetectionMainWin(QWidget):
 
     def recordShow_2(self):
         # 设置窗口对象
-        reswidget = QGroupBox('统计结果记录', self)
+        reswidget = QGroupBox('数据分析结果', self)
         # 设置布局
         resLayout = QGridLayout(reswidget)
         # 结果显示
         self.textShow_2 = QTextEdit(reswidget)
-        self.textShow_2.setText('#统计结果#')
+        self.textShow_2.setText('#数据分析#')
         resLayout.addWidget(self.textShow_2)
         # 添加布局
         reswidget.setLayout(resLayout)
@@ -210,7 +210,7 @@ class ChangeDetectionMainWin(QWidget):
         # 结果显示
         self.textShow_3 = QTextEdit(reswidget)
         self.textShow_3.resize(300, 100)
-        self.textShow_3.setText('#变化区域属性#')
+        self.textShow_3.setText('#统计结果#')
         resLayout.addWidget(self.textShow_3)
         # 添加布局
         reswidget.setLayout(resLayout)
@@ -223,21 +223,29 @@ class ChangeDetectionMainWin(QWidget):
         # 设置布局
         tableLayout = QGridLayout()
         # 图像
-        table_image = QPixmap(r'img/table.jpeg')
-        table_image = table_image.scaled(400, 128)
+        table_image1 = QPixmap(r'img/table1.png')
+        table_image1 = table_image1.scaled(400,200)
         # 设置图像
         tableMap1 = QLabel(tablewidget)
-        tableMap1.setPixmap(table_image)
+        tableMap1.setPixmap(table_image1)
         tableMap1.setScaledContents(True)
         tableLayout.addWidget(tableMap1, 1, 1, 1, 1)
+
+        # 图像
+        table_image2 = QPixmap(r'img/table2.png')
+        table_image2 = table_image2.scaled(400, 200)
         # 设置图像
         tableMap2 = QLabel(tablewidget)
-        tableMap2.setPixmap(QPixmap(table_image))
+        tableMap2.setPixmap(QPixmap(table_image2))
         tableMap2.setScaledContents(True)
         tableLayout.addWidget(tableMap2, 2, 1, 1, 1)
+
+        # 图像
+        table_image3 = QPixmap(r'img/table3.png')
+        table_image3 = table_image3.scaled(400, 200)
         # 设置图像
         tableMap3 = QLabel(tablewidget)
-        tableMap3.setPixmap(QPixmap(table_image))
+        tableMap3.setPixmap(QPixmap(table_image3))
         tableMap3.setScaledContents(True)
         tableLayout.addWidget(tableMap3, 3, 1, 1, 1)
         # 添加布局
