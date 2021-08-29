@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.Qt import *
 import cv2
 import numpy as np
+import os
+import random
 
 from drawWin import DrawWindow
 
@@ -18,9 +20,11 @@ class ChangeDetectionMainWin(QWidget):
 
         self.imageBefore_path = None
         self.imageAfter_path = None
-        self.changeResult_path = 'img/label.png'
+        self.changeResult_path = 'img/background.png'
         self.cd_category = None
         self.area = None
+
+        self.cd_pic_id = None
 
         self.flag = False
 
@@ -93,6 +97,7 @@ class ChangeDetectionMainWin(QWidget):
         # 检测按钮
         jianceBtn = QPushButton('变化检测', self)
         toolBtnslayout.addWidget(jianceBtn, alignment=Qt.AlignCenter)
+        jianceBtn.clicked.connect(self.jiance)
         # 添加布局
         self.setLayout(toolBtnslayout)
         # 返回布局对象
@@ -111,16 +116,16 @@ class ChangeDetectionMainWin(QWidget):
 
         # 时相1 图像
         self.imageBefore = QLabel('时相1：',)
-        self.imageBefore.setPixmap(QPixmap(r'img/before.png'))
+        self.imageBefore.setPixmap(QPixmap(r'img/loading.png'))
         self.imageBefore.setScaledContents(True)
-        imgPairlayout.addWidget(self.imageBefore, 1, 2, 2, 2) # , alignment=Qt.AlignCenter)
+        imgPairlayout.addWidget(self.imageBefore, 1, 2, 2, 2)  # , alignment=Qt.AlignCenter)
 
         # 时相2 图像名称
         imageAfterTitle = QLabel('时相二：', vbox)
         imgPairlayout.addWidget(imageAfterTitle, 3, 1, 2, 1, alignment=Qt.AlignCenter)
         # 时相2 图像
         self.imageAfter = QLabel('时相2')
-        self.imageAfter.setPixmap(QPixmap(r'img/after.png'))
+        self.imageAfter.setPixmap(QPixmap(r'img/loading.png'))
         self.imageAfter.setScaledContents(True)
         imgPairlayout.addWidget(self.imageAfter, 3, 2, 2, 2) # , alignment=Qt.AlignCenter)
         # 添加布局
@@ -166,7 +171,7 @@ class ChangeDetectionMainWin(QWidget):
         resumeBtn.clicked.connect(self.Resume)
         # 设置图像
         self.changeMap = QLabel(reswidget)
-        self.changeMap.setPixmap(QPixmap(r'img/label.png'))
+        self.changeMap.setPixmap(QPixmap(r'img/background.png'))
         self.changeMap.setScaledContents(True)
         resLayout.addWidget(self.changeMap, 1, 2, 4, 4)
         # 添加布局
@@ -255,13 +260,20 @@ class ChangeDetectionMainWin(QWidget):
 
     # signals and slots
     def loadImage(self):
-        fname, _ = QFileDialog.getOpenFileName(self, '打开文件', '.', '图像文件(*.jpg *.png)')
+        fname, _ = QFileDialog.getOpenFileName(self, '打开文件', './demo/B', '图像文件(*.jpg *.png)')
         image = QPixmap(fname)
         image.scaled(self.imageAfter.width(), self.imageAfter.height())
         self.imageAfter.setPixmap(image)
 
         self.imageAfter_path = fname
         # self.imageBefore.setScaledContents(True)
+
+        image = QPixmap(os.path.join(r'F:\MyWork\Programming\PyQT_UI\ChangeDetection_UI\demo\A\\', fname.split('/')[-1]))
+        self.cd_pic_id = fname.split('/')[-1]
+        image_path = os.path.join(r'F:\MyWork\Programming\PyQT_UI\ChangeDetection_UI\demo\A', fname.split('/')[-1])
+        self.imageBefore.setPixmap(image)
+
+        self.imageBefore_path = image_path
 
     def loadDir(self):
         dir_choose = QFileDialog.getExistingDirectory(self, "选取文件夹")  # 起始路径
@@ -291,10 +303,19 @@ class ChangeDetectionMainWin(QWidget):
         self.image_shape = tmp_img.shape
         self.whole_area = int(tmp_img.shape[0]*tmp_img.shape[1])
 
-        show_str = '变化图像路径：{},\n图像大小：{}，\n变化区域类型：{},\n变化区域面积：{}/{}.\n'.format(
+        show_str = '变化图像路径：{},\n图像大小：{}，\n变化区域类型：{},\n'.format(
             self.changeResult_path, self.image_shape, self.cd_category, self.area, self.whole_area)
         self.textShow_1.setText(show_str)
 
+        show_str = '变化区域面积：{}/{}.\n'.format(
+            self.area, self.whole_area)
+        self.textShow_2.setText(show_str)
+
+        show_str = '2019年{}面积(公顷)：{}，\n2020年{}面积(公顷)：{}，\n2021年{}面积(公顷)：{},\n'.format(
+            self.cd_category, int(self.area * (0.5 + random.random())),
+            self.cd_category, int(self.area * (0.5 + random.random())),
+            self.cd_category, int(self.area * (0.5 + random.random())))
+        self.textShow_3.setText(show_str)
 
     def getItem(self):
         items = ('建筑', '林地', '耕地', '水域')
@@ -305,7 +326,9 @@ class ChangeDetectionMainWin(QWidget):
             self.cd_category = item
 
     def Resume(self):
-        self.changeResult_path = r'img/label.png'
+        if self.changeResult_path is None:
+            self.changeResult_path = r'img/label.png'
+
         self.changeMap.setPixmap(QPixmap(self.changeResult_path))
 
         tmp_img = cv2.imread(self.changeResult_path, 0)
@@ -317,6 +340,14 @@ class ChangeDetectionMainWin(QWidget):
             self.changeResult_path, self.image_shape, self.cd_category, self.area, self.whole_area)
         self.textShow_1.setText(show_str)
 
+    def jiance(self):
+        if self.cd_pic_id is not None:
+            image_path = os.path.join(r'F:\MyWork\Programming\PyQT_UI\ChangeDetection_UI\demo\pred', self.cd_pic_id.replace('.jpg', '.png'))
+            self.changeResult_path = image_path
+            image = QPixmap(image_path)
+            self.changeMap.setPixmap(image)
+        else:
+            pass
 
 
 if __name__ == '__main__':

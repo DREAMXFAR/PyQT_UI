@@ -116,7 +116,7 @@ class DrawWindow(QDialog):
         self.groupbox3 = QGroupBox('绘制变化区域', hbox)
         layout3 = QHBoxLayout(self.groupbox3)
         # self.cd_res = QLabel()
-        self.cd_res = MyLabel()
+        self.cd_res = MyLabel(self.changeResult_path)
         # self.cd_res.resize(300, 300)
         # if self.changeResult_path is None:
         #     self.changeResult_path = r'img/label.png'

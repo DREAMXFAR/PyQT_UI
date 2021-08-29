@@ -8,11 +8,14 @@ from PyQt5.Qt import *
 
 class MyLabel(QLabel):
     # 鼠标点击事件
-    def __init__(self):
+    def __init__(self, image_path):
         super(MyLabel, self).__init__()
         self.start_point = QPoint(-1, -1)
         self.end_point = QPoint(-1, -1)
-        img = QPixmap('img/label.png')
+        if image_path is None:
+            img = QPixmap('img/background.png')
+        else:
+            img = QPixmap(image_path)
         # img = img.scaled(self.width(), self.height())
         img = img.scaled(300, 300)
         self.setPixmap(img)
