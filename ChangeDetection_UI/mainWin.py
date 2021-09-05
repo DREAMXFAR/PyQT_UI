@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import os
 import random
+import time
 
 from drawWin import DrawWindow
 
@@ -23,6 +24,9 @@ class ChangeDetectionMainWin(QWidget):
         self.changeResult_path = 'img/background.png'
         self.cd_category = None
         self.area = None
+        self.dir_path = None
+        self.clicked_opendir = 0
+        self.zidong_id = 0  # 用于标记自动检测到第几张图
 
         self.cd_pic_id = None
 
@@ -33,7 +37,7 @@ class ChangeDetectionMainWin(QWidget):
         设置主窗口居中布局，尺寸大小
         """
         # 设置标题
-        self.setWindowTitle('基于变化检测的自然资源检测综合系统')
+        self.setWindowTitle('自然资源调查监测综合系统')
         # 设置尺寸
         width = 1500
         height = 950
@@ -87,9 +91,9 @@ class ChangeDetectionMainWin(QWidget):
         # 设置布局
         toolBtnslayout = QHBoxLayout(hbox)
         # 导入文件夹导入
-        zidongBtn = QPushButton('选择文件夹', self)
-        toolBtnslayout.addWidget(zidongBtn, alignment=Qt.AlignCenter)
-        zidongBtn.clicked.connect(self.loadDir)
+        self.zidongBtn = QPushButton('选择文件夹', self)
+        toolBtnslayout.addWidget(self.zidongBtn, alignment=Qt.AlignCenter)
+        self.zidongBtn.clicked.connect(self.loadDir)
         # 选择图像导入
         chooseBtn = QPushButton('选择图像', self)
         toolBtnslayout.addWidget(chooseBtn, alignment=Qt.AlignCenter)
@@ -276,10 +280,42 @@ class ChangeDetectionMainWin(QWidget):
         self.imageBefore_path = image_path
 
     def loadDir(self):
-        dir_choose = QFileDialog.getExistingDirectory(self, "选取文件夹")  # 起始路径
-        if dir_choose == "":
-            print("\n取消选择")
-        print("\n你选择的文件夹为:", dir_choose)
+        if self.clicked_opendir == 0:
+            dir_choose = QFileDialog.getExistingDirectory(self, "选取文件夹")  # 起始路径
+            # if dir_choose == "":
+            #     print("\n取消选择")
+            # print("\n你选择的文件夹为:", dir_choose)
+            if dir_choose is None:
+                self.dir_path = r'F:\MyWork\Programming\PyQT_UI\ChangeDetection_UI\demo\B'
+            else:
+                self.dir_path = dir_choose
+
+            self.zidongBtn.setText("下一幅")
+            self.clicked_opendir = 1
+
+        cd_img_list = os.listdir(self.dir_path)
+        self.cd_pic_id = cd_img_list[self.zidong_id]
+        self.zidong_id += 1
+
+        fname = os.path.join(self.dir_path, self.cd_pic_id)
+        image = QPixmap(fname)
+        image.scaled(self.imageAfter.width(), self.imageAfter.height())
+        self.imageAfter.setPixmap(image)
+        image_path = os.path.join(self.dir_path, self.cd_pic_id)
+        self.imageAfter_path = image_path
+
+        image = QPixmap(os.path.join(r'F:\MyWork\Programming\PyQT_UI\ChangeDetection_UI\demo\A\\', self.cd_pic_id))
+        self.imageBefore.setPixmap(image)
+        image_path = os.path.join(r'F:\MyWork\Programming\PyQT_UI\ChangeDetection_UI\demo\A', self.cd_pic_id)
+        self.imageBefore_path = image_path
+
+        sleep_length = random.choice([0.1, 0.2, 0.3, 0.4, 0.5])
+        time.sleep(sleep_length)
+        # print(sleep_length)
+        self.jiance()
+
+        if self.zidong_id == len(cd_img_list):
+            self.zidong_id = self.zidong_id % len(cd_img_list)
 
     def drawArea(self):
         self.form1 = DrawWindow(self.imageBefore_path, self.imageAfter_path, self.changeResult_path)
@@ -303,6 +339,9 @@ class ChangeDetectionMainWin(QWidget):
         self.image_shape = tmp_img.shape
         self.whole_area = int(tmp_img.shape[0]*tmp_img.shape[1])
 
+        if self.cd_category == None:
+            self.cd_category = '其他'
+
         show_str = '变化图像路径：{},\n图像大小：{}，\n变化区域类型：{},\n'.format(
             self.changeResult_path, self.image_shape, self.cd_category, self.area, self.whole_area)
         self.textShow_1.setText(show_str)
@@ -312,13 +351,13 @@ class ChangeDetectionMainWin(QWidget):
         self.textShow_2.setText(show_str)
 
         show_str = '2019年{}面积(公顷)：{}，\n2020年{}面积(公顷)：{}，\n2021年{}面积(公顷)：{},\n'.format(
-            self.cd_category, int(self.area * (0.5 + random.random())),
-            self.cd_category, int(self.area * (0.5 + random.random())),
-            self.cd_category, int(self.area * (0.5 + random.random())))
+            self.cd_category, int(self.area * (0.2 + random.random())),
+            self.cd_category, int(self.area * (0.4 + random.random())),
+            self.cd_category, int(self.area * (0.6 + random.random())))
         self.textShow_3.setText(show_str)
 
     def getItem(self):
-        items = ('建筑', '林地', '耕地', '水域')
+        items = ('建筑', '林地', '耕地', '水域', '其他')
         dialog = QInputDialog()
         dialog.resize(400, 400)
         item, ok = dialog.getItem(self, '变化类型', '用地类型:', items)
@@ -335,6 +374,9 @@ class ChangeDetectionMainWin(QWidget):
         self.area = int(np.sum(tmp_img) / 255)
         self.image_shape = tmp_img.shape
         self.whole_area = int(tmp_img.shape[0] * tmp_img.shape[1])
+
+        if self.cd_category == None:
+            self.cd_category = '其他'
 
         show_str = '变化图像路径：{},\n图像大小：{}，\n变化区域类型：{},\n变化区域面积：{}/{}.\n'.format(
             self.changeResult_path, self.image_shape, self.cd_category, self.area, self.whole_area)

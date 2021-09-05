@@ -8,7 +8,7 @@ from drawlabel import MyLabel
 
 
 class DrawWindow(QDialog):
-    def __init__(self, imageAfter_path=None, imageBefore_path=None, changeResult_path=None):
+    def __init__(self, imageBefore_path=None, imageAfter_path=None, changeResult_path=None):
         super(DrawWindow, self).__init__()
         # images
         self.imageAfter_path = imageAfter_path
@@ -28,7 +28,7 @@ class DrawWindow(QDialog):
         设置主窗口居中布局，尺寸大小
         """
         # 设置标题
-        self.setWindowTitle('基于变化检测的自然资源检测综合系统')
+        self.setWindowTitle('调整变化图斑区域')
         # 设置尺寸
         width = 1000
         height = 500
